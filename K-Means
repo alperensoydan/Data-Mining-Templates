@@ -1,0 +1,136 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import Imputer
+
+veriler = pd.read_csv('musteriler.csv') #Duruma göre; head=None, sep=';', names=['Column1','Column2'] ya da names=['Column{}'.format(i) for i in range(1,10)]
+# print(veriler)
+# print(veriler['Hacim'].values)
+
+
+#preprocessing /////////////////////////////////
+
+#eksik veriler doldurma
+
+# imputer = Imputer(missing_values=0, strategy='mean', axis=0) #axis=0 sütun demek
+hacim = veriler['Hacim']
+hacim_zero = (veriler[['Hacim']]==0).sum () # null = pd.isna(veriler).sum()
+print(hacim_zero)
+# print(hacim_zero)
+# print(hacim)
+# imputed_hacim = imputer.fit_transform(hacim)
+# print(imputed_hacim)
+
+
+# cinsiyet = veriler['Cinsiyet']
+cinsiyet = veriler.iloc[:,1:2].values
+# print(cinsiyet)
+
+#Verilerin kategorikten numeric hale (0-1 haline) getirilmesi /////////////////////////////////
+# from sklearn.preprocessing import LabelEncoder # 3 seçenek olursa mesele TR,US,FR bunun için OneHotEncoding kullanılır.
+#
+# le = LabelEncoder()
+# cinsiyet = le.fit_transform(cinsiyet)
+# print(cinsiyet)
+
+kalan = veriler[['No','Yas','Maas']]
+
+
+
+#Veri kümesinin birleştirilmesi ve DataFrame /////////////////////////////
+
+sonuc = pd.DataFrame(data=cinsiyet,index=range(200), columns=['Cinsiyet'])
+sonuc2 = pd.DataFrame(data=hacim,index=range(200), columns=['Hacim'])
+sonuc3 = pd.DataFrame(data=kalan,index=range(200), columns=['No','Yas','Maas'])
+veriler = pd.concat([sonuc3,sonuc2], axis=1)
+# print(veriler)
+
+
+#Test-Train Bölme
+from sklearn.cross_validation import train_test_split
+
+x_train, x_test,y_train,y_test = train_test_split(veriler, sonuc, test_size=0.33, random_state=0) #random_state nasıl böleceği
+
+# print(x_train)
+# print(y_train)
+
+#Standartlaştırma-Normalleştirme -- belirli bir aralığa koyma
+
+from sklearn.preprocessing import StandardScaler
+
+sc = StandardScaler()
+x_train = sc.fit_transform(x_train)
+x_test = sc.transform(x_test) # fit eğitme, transform ise eğitimi kullanma oluyor. o sebeple x_test için yeniden öğrenme yukardaki öğrendiğini kullan diyoruz. sadece transform o yüzden
+
+# print(x_train)
+# print(x_test)
+
+
+#Logistic Regression ///////////////***********///////////////
+'''Logistic Regression'''
+from sklearn.linear_model import LogisticRegression
+
+# logr = LogisticRegression(random_state=0)
+# logr.fit(x_train,y_train)
+#
+# y_pred = logr.predict(x_test)
+# print(y_test)
+# print(y_pred)
+
+
+#K-NN ///////////////*************///////////////
+'''KNN'''
+from sklearn.neighbors import KNeighborsClassifier
+
+# knn = KNeighborsClassifier(n_neighbors=1) #n_neighbours default 5
+# knn.fit(x_train,y_train)
+#
+# y_pred = knn.predict(x_test)
+
+
+#SVM ///////////////************////////////// SVC'de noktalar çizgiye toplanmaya çalışılır, Regression'da ayrılmaya
+'''SVM'''
+from sklearn.svm import SVC
+
+# svm = SVC(kernel='linear') #Kernel Trick kernel türü ile yapılır.
+# svm.fit(x_train,y_train)
+# y_pred = svm.predict(x_test)
+
+
+#K-Means //////////****************///////////////
+'''K-Means'''
+from sklearn.cluster import KMeans
+
+k_means = KMeans(n_clusters=5, init='k-means++')
+k_means.fit(x_train,y_train)
+
+# sonuclar = []
+# for i in range(1,10): #WCSS k yani n_clusters bulmak için
+#     k_means = KMeans(n_clusters=i, init='k-means++',random_state=123)
+#     k_means.fit(x_train,y_train)
+# #     sonuclar.append(k_means.inertia_)
+#
+# plt.plot(range(1,10), sonuclar)
+# plt.show()
+
+plt.scatter(x_train[:, 3], x_train[:, 2]) #Train setleri ve Cluster Centerları bastırmak için
+plt.scatter(k_means.cluster_centers_[:, 0], k_means.cluster_centers_[:,1], marker='*', c='r')
+
+plt.show()
+
+
+
+##Confusion Matrix and Accuracy Score
+# from sklearn.metrics import confusion_matrix
+# cm = confusion_matrix(y_test,y_pred)
+# print(cm)
+#
+# from sklearn.metrics import accuracy_score
+# accuracy = accuracy_score(y_test,y_pred)
+# print(accuracy)
+
+
+
+
+
+
